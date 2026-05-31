@@ -12,4 +12,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // 3. Initialize the client securely
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl!, supabaseAnonKey!);
