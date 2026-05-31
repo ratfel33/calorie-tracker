@@ -133,7 +133,7 @@ export default function Dashboard() {
         showToast("Meal saved successfully!", "success"); // 2. Fires the toast banner
         setTimeout(() => {
         window.location.reload(); // 3. Refreshes the page/table after 1 second
-      }, 10000);
+      }, 2000);
       }
 
     } catch (err) {
@@ -193,7 +193,7 @@ export default function Dashboard() {
             </div>
             {totalCalories > calorieLimit && (
               <span className="bg-rose-100 text-rose-700 text-xs font-bold px-3 py-1 rounded-full border border-rose-200">
-                Limit Exceeded
+                Por eso estas gordo Dx
               </span>
             )}
           </div>
@@ -344,7 +344,7 @@ export default function Dashboard() {
       )}
       {/* Floating Smooth Toast Notification */}
         {toast && (
-        <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center px-5 py-3 rounded-xl shadow-xl border text-sm font-semibold tracking-wide backdrop-blur-md transition-all duration-650 transform ease-out animate-down
+        <div className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center px-5 py-3 rounded-xl shadow-xl border text-sm font-semibold tracking-wide backdrop-blur-md transition-all duration-950 transform ease-out animate-down
           ${toast.type === 'success' 
             ? 'bg-emerald-50/95 border-emerald-200 text-emerald-800 dark:bg-emerald-950/90 dark:border-emerald-800 dark:text-emerald-200' 
             : 'bg-rose-50/90 border-rose-200 text-rose-800 dark:bg-rose-950/90 dark:border-rose-800 dark:text-rose-200'
