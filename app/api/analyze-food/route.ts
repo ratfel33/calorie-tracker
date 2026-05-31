@@ -2,64 +2,55 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    // 1. Extract the user input from the request body
+    // 1. Read the exact JSON body from your dashboard
     const body = await request.json();
-    const textToAnalyze = body.foodQuery || body.ingredient || body.foodInput;    // 2. Fetch server environment credentials
+    
+    // 2. Explicitly grab 'foodQuery' (which maps to your dashboard's payload)
+    const ingredient = body.foodQuery;
+
+    // Log this to your Vercel logs so you can see it arrive
+    console.log("Backend received text:", ingredient);
+
+    if (!ingredient || !ingredient.trim()) {
+      return NextResponse.json({ error: 'No food input text provided' }, { status: 400 });
+    }
+
     const appId = process.env.NEXT_EDAMAM_APP_ID;
     const appKey = process.env.NEXT_EDAMAM_APP_KEY;
 
-    // Safety net: Verify credentials exist on the Vercel server
     if (!appId || !appKey) {
-      console.error("Server Configuration Error: Missing Edamam API credentials.");
-      return NextResponse.json(
-        { error: 'No food input text provided' }, 
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing API credentials on server' }, { status: 500 });
     }
 
-    // 3. Query the Edamam API
-    const response = await fetch(
-      `https://api.edamam.com/api/nutrition-data?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(textToAnalyze)}`
-    );
+    // 3. The exact GET URL that worked in your direct test
+    const url = `https://api.edamam.com/api/nutrition-data?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(ingredient)}`;
+    
+    const response = await fetch(url);
 
     if (!response.ok) {
-      console.error(`Edamam API responded with status: ${response.status}`);
-      return NextResponse.json(
-        { error: 'Failed to communicate with nutrition database API' }, 
-        { status: response.status }
-      );
+      return NextResponse.json({ error: 'Edamam API communication failure' }, { status: response.status });
     }
 
     const data = await response.json();
 
-    // DEBUG: Logs the exact JSON structure to your Vercel dashboard logs
-    console.log("Raw Edamam Response:", JSON.stringify(data, null, 2));
-
-    // 4. Safely extract the ENERC_KCAL value you verified in your browser
+    // 4. Dig straight into totalNutrients.ENERC_KCAL like you saw in your test response!
     const energyData = data.totalNutrients?.ENERC_KCAL;
     const rawCalories = energyData ? energyData.quantity : null;
 
-    // Check if Edamam actually returned data for this specific food item
     if (rawCalories === null || rawCalories === undefined) {
-      console.warn(`Unrecognized ingredient input: "${textToAnalyze}". No calorie data found.`);
       return NextResponse.json(
-        { error: 'Could not calculate calorie data for this specific item. Please check the spelling or quantity.' }, 
+        { error: 'Could not parse calorie data for this specific item.' }, 
         { status: 422 }
       );
     }
 
-    // 5. Package the data beautifully for your frontend dashboard
-    // Math.round removes decimals so your database column receives a clean integer
+    // 5. Send back just the clean number to the dashboard
     return NextResponse.json({ 
       calories: Math.round(rawCalories) 
     });
 
-  } catch (error: any) {
-    // Catch-all for network timeouts, syntax errors, or server crashes
-    console.error("Fatal error in analyze-food route:", error);
-    return NextResponse.json(
-      { error: 'An unexpected server error occurred while processing nutrition data.' }, 
-      { status: 500 }
-    );
+  } catch (error) {
+    console.error("Fatal error in API route:", error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
