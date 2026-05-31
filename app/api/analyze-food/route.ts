@@ -1,11 +1,36 @@
 import { NextResponse } from 'next/server';
 
+// Deep-seeking function to find calories anywhere in a nested JSON structure
+function findCaloriesDeep(obj: any): number | null {
+  if (!obj || typeof obj !== 'object') return null;
+
+  // 1. If we see ENERC_KCAL, immediately look for its quantity number
+  if (obj.ENERC_KCAL && typeof obj.ENERC_KCAL === 'object') {
+    if (typeof obj.ENERC_KCAL.quantity === 'number') {
+      return obj.ENERC_KCAL.quantity;
+    }
+  }
+
+  // 2. If we see a flat 'calories' key that holds a valid number, grab it
+  if (typeof obj.calories === 'number') {
+    return obj.calories;
+  }
+
+  // 3. Drill down deeper into arrays or child objects
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      const result = findCaloriesDeep(obj[key]);
+      if (result !== null) return result; // Return as soon as we strike gold
+    }
+  }
+
+  return null;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const ingredient = body.foodQuery;
-
-    console.log("Backend received text:", ingredient);
 
     if (!ingredient || !ingredient.trim()) {
       return NextResponse.json({ error: 'No food input text provided' }, { status: 400 });
@@ -19,29 +44,17 @@ export async function POST(request: Request) {
     const response = await fetch(url);
     const data = await response.json();
 
-    // --- ULTRA-RESILIENT CALORIE PARSING ---
-    let rawCalories = null;
+    // Run our deep recursive search across the entire nested payload
+    const rawCalories = findCaloriesDeep(data);
 
-    // 1. Try standard totalNutrients object path
-    if (data.totalNutrients?.ENERC_KCAL?.quantity !== undefined) {
-      rawCalories = data.totalNutrients.ENERC_KCAL.quantity;
-    } 
-    // 2. Try totalNutrientsKCal object path (Edamam uses this in some configurations)
-    else if (data.totalNutrientsKCal?.ENERC_KCAL?.quantity !== undefined) {
-      rawCalories = data.totalNutrientsKCal.ENERC_KCAL.quantity;
-    } 
-    // 3. Fall back to the top-level global calories summary field
-    else if (data.calories !== undefined && data.calories !== null) {
-      rawCalories = data.calories;
-    }
+    console.log("Deep search extracted calorie value:", rawCalories);
 
-    console.log("Parsed calorie result determined by server:", rawCalories);
-
-    // If the item genuinely has 0 calories (like water), allow it! 
-    // Only fail if it's completely missing or null.
     if (rawCalories === null || rawCalories === undefined) {
       return NextResponse.json(
-        { error: 'Could not parse calorie data for this specific item.' }, 
+        { 
+          error: 'Could not parse calorie data for this specific item.',
+          debugRawKeys: Object.keys(data) // Sends keys to client console for verification
+        }, 
         { status: 422 }
       );
     }
