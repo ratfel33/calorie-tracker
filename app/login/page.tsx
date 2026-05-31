@@ -1,17 +1,23 @@
 'use client';
 
-// Force Next.js to skip static generation/export checks for this route completely
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge'; 
 
 import { useState } from 'react';
-import { supabase } from '@/utils/supabase';
+// Remove the global import if it's causing the worker crash:
+// import { supabase } from '@/utils/supabase'; 
+import { createClient } from '@supabase/supabase-js';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+
+  // Create a safe runtime instance inside the component
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
@@ -70,7 +76,6 @@ export default function LoginPage() {
           <p className="text-sm text-slate-500">Sign up or enter your credentials to log into your dashboard</p>
         </div>
 
-        {/* Prevent the native form from firing unhandled static submission actions */}
         <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
           <div className="space-y-1">
             <label className="text-xs font-bold uppercase text-slate-400 tracking-wider">Email Address</label>
@@ -97,7 +102,7 @@ export default function LoginPage() {
           </div>
 
           {message && (
-            <div className="p-3 bg-slate-100 rounded-lg text-xs font-medium text-slate-600 border border-slate-200 animate-in fade-in duration-150">
+            <div className="p-3 bg-slate-100 rounded-lg text-xs font-medium text-slate-600 border border-slate-200">
               {message}
             </div>
           )}
@@ -107,7 +112,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleLogin}
               disabled={loading}
-              className="flex-1 bg-slate-900 text-white py-2.5 rounded-lg text-sm font-bold shadow hover:bg-slate-800 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-slate-900 text-white py-2.5 rounded-lg text-sm font-bold shadow hover:bg-slate-800 transition cursor-pointer disabled:opacity-50"
             >
               Sign In
             </button>
@@ -115,7 +120,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleSignUp}
               disabled={loading}
-              className="flex-1 bg-white border border-slate-200 text-slate-700 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-50 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-white border border-slate-200 text-slate-700 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-50 transition cursor-pointer disabled:opacity-50"
             >
               Register
             </button>
