@@ -94,10 +94,10 @@ export default function Dashboard() {
       // Get the currently authenticated session profile info from Supabase Auth
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (!user) {
+    /*  if (!user) {
         alert("Authentication Required: Please sign in to log nutritional data entries.");
         return;
-      }
+      } */
 
       const { data, error } = await supabase
         .from('meals')
