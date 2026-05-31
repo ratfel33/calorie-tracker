@@ -133,13 +133,42 @@ export default function Dashboard() {
         showToast("Meal saved successfully!", "success"); // 2. Fires the toast banner
         setTimeout(() => {
         window.location.reload(); // 3. Refreshes the page/table after 1 second
-      }, 2000);
+      }, 1500);
       }
 
     } catch (err) {
       console.error('Error saving meal:', err);
     }
   };
+
+  const handleDeleteMeal = async (mealId: string) => {
+  // Optional: Quick native confirmation so you don't accidentally delete items
+  if (!confirm("Are you sure you want to delete this meal entry?")) return;
+
+  try {
+    const response = await fetch('/api/delete-meal', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: mealId }),
+    });
+
+    if (response.ok) {
+      showToast("Meal deleted successfully!", "success");
+      
+      // Refresh the page after 1 second so the table updates seamlessly
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    } else {
+      showToast("Could not delete meal.", "error");
+    }
+  } catch (error) {
+    console.error("Error deleting meal:", error);
+    showToast("An unexpected error occurred.", "error");
+  }
+};
+
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       {/* Navigation Bar */}
@@ -193,7 +222,7 @@ export default function Dashboard() {
             </div>
             {totalCalories > calorieLimit && (
               <span className="bg-rose-100 text-rose-700 text-xs font-bold px-3 py-1 rounded-full border border-rose-200">
-                Por eso estas gordo Dx
+                Por eso estas gordo
               </span>
             )}
           </div>
@@ -231,6 +260,7 @@ export default function Dashboard() {
                 <tr className="bg-slate-100/70 text-slate-500 text-xs font-bold uppercase tracking-wider border-b border-slate-200">
                   <th className="px-6 py-3">Food / Ingredient</th>
                   <th className="px-6 py-3 text-right">Energy Profile</th>
+                    <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
@@ -245,7 +275,19 @@ export default function Dashboard() {
                     <tr key={meal.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="px-6 py-4 font-medium text-slate-900">{meal.food_name}</td>
                       <td className="px-6 py-4 text-right font-bold text-slate-700">{meal.calories} kcal</td>
+                      <td className="px-6 py-4 text-right text-sm font-medium">
+                      <button
+                        onClick={() => handleDeleteMeal(meal.id)}
+                        className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors duration-200"
+                        title="Delete entry"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-16v1a3 3 0 003 3h10M4 7h16" />
+                        </svg>
+                      </button>
+                    </td>
                     </tr>
+                      
                   ))
                 ) : (
                   <tr>

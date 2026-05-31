@@ -1,4 +1,10 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js'; // Assuming you are using Supabase
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY! // Or your standard auth key setup
+);
 
 // Deep-seeking function to find calories anywhere in a nested JSON structure
 function findCaloriesDeep(obj: any): number | null {
@@ -66,5 +72,31 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Fatal error in API route:", error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ error: 'Meal ID is required' }, { status: 400 });
+    }
+
+    // Delete the row matching this specific ID
+    const { error } = await supabase
+      .from('meals') // Change 'meals' to your exact database table name if it's different
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      throw error;
+    }
+
+    return NextResponse.json({ success: true });
+
+  } catch (error) {
+    console.error('Error deleting meal:', error);
+    return NextResponse.json({ error: 'Failed to delete the meal entry' }, { status: 500 });
   }
 }
