@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     // 1. Extract the user input from the request body
-    const { ingredient } = await request.json();
-
+    const { foodQuery } = await request.json();
+    const ingredient = foodQuery;
     // 2. Fetch server environment credentials
     const appId = process.env.NEXT_EDAMAM_APP_ID;
     const appKey = process.env.NEXT_EDAMAM_APP_KEY;
