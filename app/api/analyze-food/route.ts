@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'; // Assuming you are using 
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // Or your standard auth key setup
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // Or your standard auth key setup
 );
 
 // Deep-seeking function to find calories anywhere in a nested JSON structure
