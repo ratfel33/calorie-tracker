@@ -35,7 +35,7 @@ export default function Dashboard() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentMeals = meals.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(meals.length / itemsPerPage);
-
+  
   const showToast = (message: string, type: 'success' | 'error') => {
   setToast({ message, type });
   setTimeout(() => setToast(null), 3500); // Automatically disappears after 3.5 seconds
@@ -103,34 +103,39 @@ export default function Dashboard() {
 
   // 3. Persist the record safely inside the Cloud Database
   const handleSaveMeal = async () => {
-  try {
-    const response = await fetch('/api/save-meal', { // Replace with your exact endpoint if different
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ /* your existing payload data here */ })
-    });
+    if (!foodInput || calculatedCalories === null) return;
 
-    if (response.ok) {
-      // 1. Close the popup modal instantly
-      setIsModalOpen(false); // Change 'setIsModalOpen' to match your exact modal state setter
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
 
-      // 2. Fire the beautiful success notification
-      showToast("Meal saved successfully!", "success");
+      if (!user) {
+        alert("Authentication Required: Please sign in using the Secure Access tab to log nutritional entries.");
+        return;
+      }
 
-      // 3. Refresh the page after a brief delay so the user sees the toast, 
-      // updating the table data flawlessly
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      const { data, error } = await supabase
+        .from('meals')
+        .insert([
+          {
+            user_id: user.id, 
+            food_name: foodInput,
+            // Point this to your state variable! It is fully updated by the time you click save.
+            calories: calculatedCalories, 
+            consumed_date: selectedDate
+          }
+        ])
+        .select();
 
-    } else {
-      showToast("Failed to save meal. Please try again.", "error");
+      if (error) {
+        console.error("Database error:", error.message);
+      } else {
+        alert("Meal saved successfully!");
+      }
+
+    } catch (err) {
+      console.error('Error saving meal:', err);
     }
-  } catch (error) {
-    console.error("Error saving meal:", error);
-    showToast("An unexpected error occurred.", "error");
-  }
-};
+  };
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       {/* Navigation Bar */}
@@ -330,24 +335,6 @@ export default function Dashboard() {
                 Save Entry
               </button>
             </div>
-          </div>
-        </div>
-      )}
-      {/* Floating Smooth Toast Notification */}
-      {toast && (
-        <div className={`fixed bottom-5 right-5 z-50 flex items-center px-5 py-3 rounded-xl shadow-xl border text-sm font-semibold tracking-wide backdrop-blur-md transition-all duration-300 transform scale-100 ease-out animate-fade-in-up
-          ${toast.type === 'success' 
-            ? 'bg-emerald-50/90 border-emerald-200 text-emerald-800 dark:bg-emerald-950/90 dark:border-emerald-800 dark:text-emerald-200' 
-            : 'bg-rose-50/90 border-rose-200 text-rose-800 dark:bg-rose-950/90 dark:border-rose-800 dark:text-rose-200'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            {toast.type === 'success' ? (
-              <span className="text-base text-emerald-500">✨</span>
-            ) : (
-              <span className="text-base text-rose-500">⚠️</span>
-            )}
-            <span>{toast.message}</span>
           </div>
         </div>
       )}
