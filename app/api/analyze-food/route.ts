@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   try {
     // 1. Extract the user input from the request body
-    const { foodQuery } = await request.json();
-    const ingredient = foodQuery;
-    // 2. Fetch server environment credentials
+    const body = await request.json();
+    const textToAnalyze = body.foodQuery || body.ingredient || body.foodInput;    // 2. Fetch server environment credentials
     const appId = process.env.NEXT_EDAMAM_APP_ID;
     const appKey = process.env.NEXT_EDAMAM_APP_KEY;
 
@@ -13,14 +12,14 @@ export async function POST(request: Request) {
     if (!appId || !appKey) {
       console.error("Server Configuration Error: Missing Edamam API credentials.");
       return NextResponse.json(
-        { error: 'Missing API credentials on server' }, 
-        { status: 500 }
+        { error: 'No food input text provided' }, 
+        { status: 400 }
       );
     }
 
     // 3. Query the Edamam API
     const response = await fetch(
-      `https://api.edamam.com/api/nutrition-data?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(ingredient)}`
+      `https://api.edamam.com/api/nutrition-data?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(textToAnalyze)}`
     );
 
     if (!response.ok) {
@@ -42,7 +41,7 @@ export async function POST(request: Request) {
 
     // Check if Edamam actually returned data for this specific food item
     if (rawCalories === null || rawCalories === undefined) {
-      console.warn(`Unrecognized ingredient input: "${ingredient}". No calorie data found.`);
+      console.warn(`Unrecognized ingredient input: "${textToAnalyze}". No calorie data found.`);
       return NextResponse.json(
         { error: 'Could not calculate calorie data for this specific item. Please check the spelling or quantity.' }, 
         { status: 422 }
