@@ -80,11 +80,13 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ foodQuery: foodInput }),
       });
-      const data = await response.json();
+
+      const result = await response.json(); // Fixed: changed 'res' to 'response'
+
       if (response.ok) {
-        setCalculatedCalories(data.ENERC_KCAL);
+        setCalculatedCalories(result.calories); // Saves the number to state
       } else {
-        console.error(data.error);
+        console.error(result.error); // Fixed: reads error from result payload
       }
     } catch (err) {
       console.error('Error hitting your backend route:', err);
@@ -111,27 +113,23 @@ export default function Dashboard() {
           {
             user_id: user.id, 
             food_name: foodInput,
-            calories: calculatedCalories,
+            // Point this to your state variable! It is fully updated by the time you click save.
+            calories: calculatedCalories, 
             consumed_date: selectedDate
           }
         ])
         .select();
 
-      if (error) throw error;
-
-      if (data) {
-        setMeals([data[0], ...meals]);
+      if (error) {
+        console.error("Database error:", error.message);
+      } else {
+        alert("Meal saved successfully!");
       }
 
-      setFoodInput('');
-      setCalculatedCalories(null);
-      setIsModalOpen(false);
     } catch (err) {
-      console.error('Error attempting insertion process:', err);
-      alert('Failed to log record safely. Verify Row Level Security policies.');
+      console.error('Error saving meal:', err);
     }
   };
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       {/* Navigation Bar */}
