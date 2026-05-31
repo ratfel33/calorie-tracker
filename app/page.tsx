@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/utils/supabase'; // Adjust this import path to match where you saved the config file
+import { supabase } from '@/utils/supabase';
 
 interface Meal {
   id: string;
@@ -18,6 +18,7 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const itemsPerPage = 10;
 
   // Form State
@@ -34,9 +35,16 @@ export default function Dashboard() {
   const currentMeals = meals.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(meals.length / itemsPerPage);
 
-  // ==========================================
-  // DATABASE OPERATIONS (READ & WRITE)
-  // ==========================================
+  // Sync session profile user info safely on load without breaking DOM rendering
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserEmail(user.email ?? 'Active User');
+      }
+    };
+    checkUser();
+  }, []);
 
   // 1. Fetch meals corresponding to the active calendar date filter
   const fetchMealsForDate = async (dateString: string) => {
@@ -46,11 +54,11 @@ export default function Dashboard() {
         .from('meals')
         .select('id, food_name, calories, consumed_date')
         .eq('consumed_date', dateString)
-        .order('created_at', { ascending: false }); // Show newest entries first
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setMeals(data || []);
-      setCurrentPage(1); // Reset to page 1 on date filter adjustment
+      setCurrentPage(1); 
     } catch (err) {
       console.error('Error fetching data from Supabase:', err);
     } finally {
@@ -58,7 +66,6 @@ export default function Dashboard() {
     }
   };
 
-  // Automatically trigger a database re-fetch whenever the calendar selector targets a new day
   useEffect(() => {
     fetchMealsForDate(selectedDate);
   }, [selectedDate]);
@@ -91,19 +98,18 @@ export default function Dashboard() {
     if (!foodInput || calculatedCalories === null) return;
 
     try {
-      // Get the currently authenticated session profile info from Supabase Auth
       const { data: { user } } = await supabase.auth.getUser();
 
-    /*  if (!user) {
-        alert("Authentication Required: Please sign in to log nutritional data entries.");
+      if (!user) {
+        alert("Authentication Required: Please sign in using the Secure Access tab to log nutritional entries.");
         return;
-      } */
+      }
 
       const { data, error } = await supabase
         .from('meals')
         .insert([
           {
-            user_id: user.id, // Direct foreign-key compliance link
+            user_id: user.id, 
             food_name: foodInput,
             calories: calculatedCalories,
             consumed_date: selectedDate
@@ -113,12 +119,10 @@ export default function Dashboard() {
 
       if (error) throw error;
 
-      // Optimistically push the newly returned database record straight into local state arrays
       if (data) {
         setMeals([data[0], ...meals]);
       }
 
-      // Reset popup context and clear input states
       setFoodInput('');
       setCalculatedCalories(null);
       setIsModalOpen(false);
@@ -138,13 +142,31 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center space-x-6">
           <span className="text-slate-300 font-medium hidden sm:inline">
-            Hello, <span className="text-teal-400 font-semibold">Active User</span>
+            Hello, <span className="text-teal-400 font-semibold">{userEmail || 'Guest Account'}</span>
           </span>
+          {!userEmail ? (
+            <a 
+              href="/login" 
+              className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg transition font-bold"
+            >
+              Secure Access
+            </a>
+          ) : (
+            <button 
+              onClick={async () => {
+                await supabase.auth.signOut();
+                window.location.reload();
+              }}
+              className="text-xs bg-slate-800 hover:bg-rose-950 text-slate-300 hover:text-rose-200 border border-slate-700 px-3 py-1.5 rounded-lg transition font-bold cursor-pointer"
+            >
+              Sign Out
+            </button>
+          )}
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold w-10 h-10 rounded-full flex items-center justify-center transition shadow-sm cursor-pointer"
           >
-            <span className="material-icons text-xl font-black">add</span>
+            <span className="font-black text-xl">+</span>
           </button>
         </div>
       </nav>
@@ -223,7 +245,8 @@ export default function Dashboard() {
                       No meals registered for this target timeline date.
                     </td>
                   </tr>
-                )}
+                )
+                }
               </tbody>
             </table>
           </div>
@@ -258,7 +281,7 @@ export default function Dashboard() {
       {/* Popup Form Modal Overlay */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md border border-slate-100 transform transition-all overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md border border-slate-100 transform transition-all overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
               <h3 className="font-bold text-slate-900 text-lg">Log New Intake</h3>
             </div>
