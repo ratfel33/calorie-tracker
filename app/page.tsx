@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/utils/supabase'; // Adjust this import path to match where you saved the config file
 
-// Interfaces for structured data handling
 interface Meal {
   id: string;
   food_name: string;
@@ -11,13 +11,13 @@ interface Meal {
 }
 
 export default function Dashboard() {
-  // State management
   const [meals, setMeals] = useState<Meal[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 10;
 
   // Form State
@@ -25,19 +25,45 @@ export default function Dashboard() {
   const [calculatedCalories, setCalculatedCalories] = useState<number | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // 1. Calculate Aggregations
   const totalCalories = meals.reduce((sum, meal) => sum + meal.calories, 0);
   const calorieLimit = 1500;
-  // Calculate percentage capped at 100%
   const progressPercentage = Math.min((totalCalories / calorieLimit) * 100, 100);
 
-  // 2. Pagination Logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentMeals = meals.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(meals.length / itemsPerPage);
 
-  // 3. Trigger Serverless Analysis on Blur or Enter
+  // ==========================================
+  // DATABASE OPERATIONS (READ & WRITE)
+  // ==========================================
+
+  // 1. Fetch meals corresponding to the active calendar date filter
+  const fetchMealsForDate = async (dateString: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('meals')
+        .select('id, food_name, calories, consumed_date')
+        .eq('consumed_date', dateString)
+        .order('created_at', { ascending: false }); // Show newest entries first
+
+      if (error) throw error;
+      setMeals(data || []);
+      setCurrentPage(1); // Reset to page 1 on date filter adjustment
+    } catch (err) {
+      console.error('Error fetching data from Supabase:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Automatically trigger a database re-fetch whenever the calendar selector targets a new day
+  useEffect(() => {
+    fetchMealsForDate(selectedDate);
+  }, [selectedDate]);
+
+  // 2. Analyze raw description input via secure serverless proxy route
   const handleAnalyzeFood = async () => {
     if (!foodInput.trim()) return;
     setIsAnalyzing(true);
@@ -60,22 +86,46 @@ export default function Dashboard() {
     }
   };
 
-  // 4. Save Record to Database (Mocking update step before state management links)
-  const handleSaveMeal = () => {
+  // 3. Persist the record safely inside the Cloud Database
+  const handleSaveMeal = async () => {
     if (!foodInput || calculatedCalories === null) return;
-    
-    const newMeal: Meal = {
-      id: crypto.randomUUID(),
-      food_name: foodInput,
-      calories: calculatedCalories,
-      consumed_date: selectedDate
-    };
 
-    setMeals([newMeal, ...meals]);
-    // Reset Form
-    setFoodInput('');
-    setCalculatedCalories(null);
-    setIsModalOpen(false);
+    try {
+      // Get the currently authenticated session profile info from Supabase Auth
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        alert("Authentication Required: Please sign in to log nutritional data entries.");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('meals')
+        .insert([
+          {
+            user_id: user.id, // Direct foreign-key compliance link
+            food_name: foodInput,
+            calories: calculatedCalories,
+            consumed_date: selectedDate
+          }
+        ])
+        .select();
+
+      if (error) throw error;
+
+      // Optimistically push the newly returned database record straight into local state arrays
+      if (data) {
+        setMeals([data[0], ...meals]);
+      }
+
+      // Reset popup context and clear input states
+      setFoodInput('');
+      setCalculatedCalories(null);
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Error attempting insertion process:', err);
+      alert('Failed to log record safely. Verify Row Level Security policies.');
+    }
   };
 
   return (
@@ -118,7 +168,6 @@ export default function Dashboard() {
             )}
           </div>
           
-          {/* Flat Matte Gradient Track */}
           <div className="w-full bg-slate-100 h-4 rounded-full overflow-hidden border border-slate-200">
             <div 
               style={{ 
@@ -155,7 +204,13 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
-                {currentMeals.length > 0 ? (
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={2} className="px-6 py-12 text-center text-slate-400 font-medium animate-pulse">
+                      Syncing with live database...
+                    </td>
+                  </tr>
+                ) : currentMeals.length > 0 ? (
                   currentMeals.map((meal) => (
                     <tr key={meal.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="px-6 py-4 font-medium text-slate-900">{meal.food_name}</td>
@@ -173,7 +228,7 @@ export default function Dashboard() {
             </table>
           </div>
 
-          {/* Matte Footer Pagination Controls */}
+          {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
               <span className="text-xs font-medium text-slate-500">
@@ -222,7 +277,6 @@ export default function Dashboard() {
                 />
               </div>
 
-              {/* Secure Response Dynamic Evaluation Output Panel */}
               <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 min-h-[4.5rem] flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-500">Calculated Energy Profile:</span>
                 {isAnalyzing ? (
@@ -235,7 +289,6 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Form Actions Footer Panel */}
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end space-x-3">
               <button 
                 onClick={() => {
