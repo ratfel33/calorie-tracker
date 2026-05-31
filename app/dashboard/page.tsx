@@ -129,7 +129,11 @@ export default function Dashboard() {
       if (error) {
         console.error("Database error:", error.message);
       } else {
-        alert("Meal saved successfully!");
+        setIsModalOpen(false); // 1. Closes your popup instantly
+        showToast("Meal saved successfully!", "success"); // 2. Fires the toast banner
+        setTimeout(() => {
+        window.location.reload(); // 3. Refreshes the page/table after 1 second
+      }, 1000);
       }
 
     } catch (err) {
@@ -335,6 +339,24 @@ export default function Dashboard() {
                 Save Entry
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Floating Smooth Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-5 right-5 z-50 flex items-center px-5 py-3 rounded-xl shadow-xl border text-sm font-semibold tracking-wide backdrop-blur-md transition-all duration-300 transform scale-100 ease-out animate-fade-in-up
+          ${toast.type === 'success' 
+            ? 'bg-emerald-50/90 border-emerald-200 text-emerald-800 dark:bg-emerald-950/90 dark:border-emerald-800 dark:text-emerald-200' 
+            : 'bg-rose-50/90 border-rose-200 text-rose-800 dark:bg-rose-950/90 dark:border-rose-800 dark:text-rose-200'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {toast.type === 'success' ? (
+              <span className="text-base text-emerald-500">✨</span>
+            ) : (
+              <span className="text-base text-rose-500">⚠️</span>
+            )}
+            <span>{toast.message}</span>
           </div>
         </div>
       )}
