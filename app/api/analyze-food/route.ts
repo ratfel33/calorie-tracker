@@ -14,23 +14,31 @@ export async function POST(request: Request) {
     const appId = process.env.NEXT_EDAMAM_APP_ID;
     const appKey = process.env.NEXT_EDAMAM_APP_KEY;
 
-    // DIAGNOSTIC LOG: Let's see if the server actually reads the keys
-    console.log("Server Key Check - ID Exists:", !!appId, "Key Exists:", !!appKey);
-
     const url = `https://api.edamam.com/api/nutrition-data?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(ingredient)}`;
     
     const response = await fetch(url);
     const data = await response.json();
 
-    // DIAGNOSTIC LOG: Let's print the exact structure Edamam answers with
-    console.log("Edamam Raw Data Response Keys:", Object.keys(data));
-    if (data.ingredients) {
-      console.log("Edamam parsed ingredients detail:", JSON.stringify(data.ingredients));
+    // --- ULTRA-RESILIENT CALORIE PARSING ---
+    let rawCalories = null;
+
+    // 1. Try standard totalNutrients object path
+    if (data.totalNutrients?.ENERC_KCAL?.quantity !== undefined) {
+      rawCalories = data.totalNutrients.ENERC_KCAL.quantity;
+    } 
+    // 2. Try totalNutrientsKCal object path (Edamam uses this in some configurations)
+    else if (data.totalNutrientsKCal?.ENERC_KCAL?.quantity !== undefined) {
+      rawCalories = data.totalNutrientsKCal.ENERC_KCAL.quantity;
+    } 
+    // 3. Fall back to the top-level global calories summary field
+    else if (data.calories !== undefined && data.calories !== null) {
+      rawCalories = data.calories;
     }
 
-    const energyData = data.totalNutrients?.ENERC_KCAL;
-    const rawCalories = energyData ? energyData.quantity : null;
+    console.log("Parsed calorie result determined by server:", rawCalories);
 
+    // If the item genuinely has 0 calories (like water), allow it! 
+    // Only fail if it's completely missing or null.
     if (rawCalories === null || rawCalories === undefined) {
       return NextResponse.json(
         { error: 'Could not parse calorie data for this specific item.' }, 
