@@ -82,7 +82,7 @@ export default function Dashboard() {
       });
       const data = await response.json();
       if (response.ok) {
-        setCalculatedCalories(data.calories);
+        setCalculatedCalories(data.ENERC_KCAL);
       } else {
         console.error(data.error);
       }

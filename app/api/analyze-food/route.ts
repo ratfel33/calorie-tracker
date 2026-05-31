@@ -8,10 +8,10 @@ export async function POST(request: Request) {
     const appId = process.env.NEXT_EDAMAM_APP_ID;
     const appKey = process.env.NEXT_EDAMAM_APP_KEY;
 
-    if (!appId || !appKey) {
-      console.error("❌ Backend Error: NEXT_EDAMAM keys are missing in Vercel environment variables.");
-      return NextResponse.json({ error: 'Missing API credentials on server' }, { status: 500 });
-    }
+if (!appId || !appKey) {
+  console.error("DEBUG: appId is", appId, "appKey is", appKey); // Add this line to see what's happening
+  return NextResponse.json({ error: 'Missing API credentials on server' }, { status: 500 });
+}
 
     const response = await fetch(
       `https://api.edamam.com/api/nutrition-data?app_id=${appId}&app_key=${appKey}&ingr=${encodeURIComponent(ingredient)}`
