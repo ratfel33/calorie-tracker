@@ -77,39 +77,37 @@ export async function POST(request: Request) {
   }
 }
 
-
 export async function DELETE(request: Request) {
   try {
-    // 1. Pull the data directly from the incoming request body
-    const body = await request.json();
-    const mealId = body.id;
+    // 1. Grab the ID from the incoming custom headers
+    const mealId = request.headers.get('X-Meal-ID');
 
     if (!mealId) {
-      return NextResponse.json({ error: 'No meal ID provided in body' }, { status: 400 });
+      return NextResponse.json({ error: 'No meal ID found in request headers' }, { status: 400 });
     }
 
-    // 2. Fire an isolated, uncached deletion sequence
+    // 2. Execute the deletion query directly against your table
     const { data, error } = await supabaseAdmin
       .from('meals')
       .delete()
-      .eq('id', String(mealId).trim())
+      .eq('id', mealId.trim())
       .select();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 3. Evaluate matching results explicitly
+    // 3. Confirm whether Postgres found the row
     if (!data || data.length === 0) {
       return NextResponse.json({ 
-        error: `Postgres database mismatch. Verified 0 records for ID: ${mealId}` 
+        error: `Postgres mismatch. The table 'meals' has an 'id' column, but no row matches: ${mealId}` 
       }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error("Fatal catch inside DELETE route:", error);
-    return NextResponse.json({ error: 'Internal server processing error' }, { status: 500 });
+    console.error("Catch inside DELETE route:", error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

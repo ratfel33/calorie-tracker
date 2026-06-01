@@ -145,39 +145,46 @@ export default function Dashboard() {
     }
   };
 
-
-  const handleConfirmDelete = async () => {
+const handleConfirmDelete = async () => {
   if (!pendingDeleteId) return;
 
   try {
-    // PACKAGING INSIDE BODY: Standard, uncacheable transmission layout
-    const response = await fetch('/api/analyze-food', { 
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ id: pendingDeleteId }),
-    });
+    // 🟢 DELETE DIRECTLY VIA SUPABASE CLIENT (Just like handleSaveMeal does!)
+    const { data, error } = await supabase
+      .from('meals')
+      .delete()
+      .eq('id', pendingDeleteId)
+      .select();
 
-    const data = await response.json().catch(() => ({}));
-
+    // Reset the confirmation UI state variable right away
     setPendingDeleteId(null);
 
-    if (response.ok) {
-      showToast("Meal deleted successfully!", "success");
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
-    } else {
-      showToast(data.error || `Server error: ${response.status}`, "error");
+    if (error) {
+      console.error("Database deletion error:", error.message);
+      showToast(`Database error: ${error.message}`, "error");
+      return;
     }
+
+    // Check if a row was actually removed
+    if (!data || data.length === 0) {
+      showToast("Could not find that meal entry to delete.", "error");
+      return;
+    }
+
+    // Success tracker
+    showToast("Meal deleted successfully!", "success");
+    
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+
   } catch (error) {
-    console.error("Error deleting meal:", error);
+    console.error("Unexpected error during delete execution:", error);
     setPendingDeleteId(null);
-    showToast("Network or unexpected setup error.", "error");
+    showToast("An unexpected error occurred.", "error");
   }
 };
+  
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
