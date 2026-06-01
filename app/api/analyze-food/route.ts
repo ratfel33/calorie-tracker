@@ -77,26 +77,41 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const { id } = await request.json();
+    // 1. Extract the payload sent by the frontend
+    const body = await request.json();
+    const mealId = body.id;
 
-    if (!id) {
-      return NextResponse.json({ error: 'Meal ID is required' }, { status: 400 });
+    console.log("Backend received a delete request for meal ID:", mealId);
+
+    if (!mealId) {
+      return NextResponse.json({ error: 'No meal ID provided' }, { status: 400 });
     }
 
-    // Delete the row matching this specific ID
-    const { error } = await supabase
-      .from('meals') // Change 'meals' to your exact database table name if it's different
-      .delete()
-      .eq('id', id);
+    // 2. Run the deletion query against Supabase
+    // CRUCIAL: Make sure your table name here matches your actual Supabase table (e.g., 'meals' or 'daily_meals')
+    const { error, count } = await supabase
+      .from('meals') 
+      .delete({ count: 'exact' }) // This lets us track if a row was actually touched
+      .eq('id', mealId);
 
     if (error) {
-      throw error;
+      console.error("Supabase returned a database error:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    console.log(`Database rows deleted successfully. Count: ${count}`);
+
+    // If count is 0, it means the ID sent didn't match any row in the table
+    if (count === 0) {
+      return NextResponse.json({ 
+        error: 'No matching meal record found to delete. Double-check your table ID mapping.' 
+      }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error('Error deleting meal:', error);
-    return NextResponse.json({ error: 'Failed to delete the meal entry' }, { status: 500 });
+    console.error("Fatal crash in DELETE API route:", error);
+    return NextResponse.json({ error: 'Internal server error processing deletion' }, { status: 500 });
   }
 }
