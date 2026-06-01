@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'next/navigation'; // 🟢 Use 'next/navigation'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 const getLocalNicaraguaDateString = () => {
   const d = new Date();
   const year = d.getFullYear();
@@ -237,6 +238,21 @@ const handleConfirmDelete = async () => {
     );
   }
 
+  // 1. Calculate the grand total of calories logged for the selected day
+//const totalCalories = meals.reduce((sum, meal) => sum + (Number(meal.calories) || 0), 0);
+
+const chartData = meals.map((meal) => {
+  const mealCalories = Number(meal.calories) || 0;
+  const percentage = totalCalories > 0 ? Math.round((mealCalories / totalCalories) * 100) : 0;
+
+  return {
+    // 🟢 SWAP 'description' for whatever column you use in your table (e.g., food_name, title)
+    name: meal.food_name || 'Unnamed Meal', 
+    calories: mealCalories,
+    percentage: percentage,
+  };
+});
+  
   return (
     
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
@@ -370,6 +386,53 @@ const handleConfirmDelete = async () => {
                 }
               </tbody>
             </table>
+
+                {/* --- CALORIE BREAKDOWN CHART CONTAINER --- */}
+{meals.length > 0 && (
+  <div className="mt-8 bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-md">
+    <div className="mb-4">
+      <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+        Calorie Share Breakdown
+      </h2>
+      <p className="text-xs text-slate-400 mt-1">
+        Total intake today: <span className="text-teal-400 font-bold">{totalCalories} kcal</span>
+      </p>
+    </div>
+
+    {/* Responsive wrapper ensures graph fits perfectly on mobile and desktop screens */}
+    <div className="w-full h-64">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={chartData}
+          layout="vertical" // Horizontal bars give layout lists maximum text room
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
+          <XAxis type="number" unit="%" stroke="#94a3b8" fontSize={12} domain={[0, 100]} />
+          <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={12} width={80} />
+          
+          <Tooltip
+            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+            itemStyle={{ color: '#2dd4bf' }}
+            formatter={(value: any, name: any, props: any) => [
+              `${props.payload.calories} kcal (${value}%)`,
+              'Intake'
+            ]}
+          />
+          
+          <Bar dataKey="percentage" fill="#14b8a6" radius={[0, 4, 4, 0]} barSize={24}>
+            {chartData.map((entry, index) => (
+              // This alternating opacity tint helps distinguish stacked meal lists easily
+              <Cell key={`cell-${index}`} fill="#14b8a6" opacity={index % 2 === 0 ? 1 : 0.75} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+)}
+
+
+
           </div>
 
           {/* Pagination Controls */}
