@@ -12,6 +12,7 @@ interface Meal {
 
 export default function Dashboard() {
   const [meals, setMeals] = useState<Meal[]>([]);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split('T')[0]
   );
@@ -35,6 +36,9 @@ export default function Dashboard() {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentMeals = meals.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(meals.length / itemsPerPage);
+  const triggerDeleteConfirmation = (mealId: string) => {
+  setPendingDeleteId(mealId);
+};
   
   const showToast = (message: string, type: 'success' | 'error') => {
   setToast({ message, type });
@@ -141,30 +145,34 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteMeal = async (mealId: string) => {
-  // Optional: Quick native confirmation so you don't accidentally delete items
-  if (!confirm("Are you sure you want to delete this meal entry?")) return;
+ const handleConfirmDelete = async () => {
+  if (!pendingDeleteId) return;
 
   try {
-    const response = await fetch('/api/delete-meal', {
+    const response = await fetch('/api/delete-meal', { 
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: mealId }),
+      body: JSON.stringify({ id: pendingDeleteId }),
     });
+
+    const data = await response.json().catch(() => ({}));
+
+    // Clear the pending state immediately to close the confirmation banner
+    setPendingDeleteId(null);
 
     if (response.ok) {
       showToast("Meal deleted successfully!", "success");
       
-      // Refresh the page after 1 second so the table updates seamlessly
       setTimeout(() => {
         window.location.reload();
       }, 1000);
     } else {
-      showToast("Could not delete meal.", "error");
+      showToast(data.error || `Server error: ${response.status}`, "error");
     }
   } catch (error) {
     console.error("Error deleting meal:", error);
-    showToast("An unexpected error occurred.", "error");
+    setPendingDeleteId(null);
+    showToast("Network or unexpected setup error.", "error");
   }
 };
 
@@ -277,7 +285,7 @@ export default function Dashboard() {
                       <td className="px-6 py-4 text-right font-bold text-slate-700">{meal.calories} kcal</td>
                       <td className="px-6 py-4 text-right text-sm font-medium">
                       <button
-                        onClick={() => handleDeleteMeal(meal.id)}
+                        onClick={() => triggerDeleteConfirmation(meal.id)}
                         className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors duration-200"
                         title="Delete entry"
                       >
@@ -402,6 +410,31 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+      {/* Top Dropping Custom Confirmation Banner */}
+{pendingDeleteId && (
+  <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 flex flex-col sm:flex-row items-center gap-4 px-6 py-4 rounded-xl shadow-2xl border bg-slate-900/95 border-slate-800 text-white backdrop-blur-md transition-all duration-300 transform scale-100 ease-out animate-down max-w-md w-[90vw]">
+    <div className="flex items-center gap-3 text-center sm:text-left">
+      <span className="text-xl text-rose-500">🗑️</span>
+      <p className="text-sm font-medium tracking-wide">
+        Are you sure you want to delete this meal entry? This action cannot be undone.
+      </p>
+    </div>
+    <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+      <button
+        onClick={() => setPendingDeleteId(null)}
+        className="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors duration-200"
+      >
+        Cancel
+      </button>
+      <button
+        onClick={handleConfirmDelete}
+        className="px-4 py-1.5 text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white rounded-lg shadow-md hover:shadow-rose-900/20 transition-all duration-200"
+      >
+        Delete
+      </button>
+    </div>
+  </div>
+)}
     </div>
   );
 }
