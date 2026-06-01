@@ -419,7 +419,7 @@ const chartData = meals.map((meal) => {
 {meals.length > 0 && (
   <div className="mt-8 bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-md">
     <div className="mb-4">
-      <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+      <h2 className="text-sm font-semibold text-slate-300 tracking-wider">
         Calorie Share Breakdown
       </h2>
       <p className="text-xs text-slate-400 mt-1">
@@ -439,7 +439,7 @@ const chartData = meals.map((meal) => {
           <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={12} width={80} />
           
           <Tooltip
-            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+            contentStyle={{ backgroundColor: '#586174', borderColor: '#334155', borderRadius: '8px' }}
             itemStyle={{ color: '#2dd4bf' }}
             formatter={(value: any, name: any, props: any) => [
               `${props.payload.calories} kcal (${value}%)`,
