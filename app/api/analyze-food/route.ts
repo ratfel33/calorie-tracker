@@ -80,6 +80,7 @@ export async function DELETE(request: NextRequest) { // Using NextRequest for ea
     // Extract the id directly from the URL query string
     const { searchParams } = new URL(request.url);
     const mealId = searchParams.get('id');
+    const targetId = String(mealId).trim();
 
     if (!mealId) {
       return NextResponse.json({ error: 'No meal ID provided in URL parameters' }, { status: 400 });
@@ -87,10 +88,10 @@ export async function DELETE(request: NextRequest) { // Using NextRequest for ea
 
     // Execute deletion query directly against your 'meals' table
     const { error, count } = await supabase
-      .from('meals') 
-      .delete() 
-      .eq('id', mealId)
-      .select();
+    .from('meals')
+    .delete()
+    .eq('id', targetId) // Matches the strict type format
+    .select();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
