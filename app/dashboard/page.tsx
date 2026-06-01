@@ -389,7 +389,33 @@ const chartData = meals.map((meal) => {
 
           </div>
 
-          {/* --- CALORIE BREAKDOWN CHART CONTAINER --- */}
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+              <span className="text-xs font-medium text-slate-500">
+                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, meals.length)} of {meals.length} items
+              </span>
+              <div className="flex space-x-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => prev - 1)}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-bold shadow-sm disabled:opacity-50 transition cursor-pointer"
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  className="px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-bold shadow-sm disabled:opacity-50 transition cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* --- CALORIE BREAKDOWN CHART CONTAINER --- */}
 {meals.length > 0 && (
   <div className="mt-8 bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-md">
     <div className="mb-4">
@@ -432,32 +458,6 @@ const chartData = meals.map((meal) => {
     </div>
   </div>
 )}
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-              <span className="text-xs font-medium text-slate-500">
-                Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, meals.length)} of {meals.length} items
-              </span>
-              <div className="flex space-x-2">
-                <button
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(prev => prev - 1)}
-                  className="px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-bold shadow-sm disabled:opacity-50 transition cursor-pointer"
-                >
-                  Previous
-                </button>
-                <button
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(prev => prev + 1)}
-                  className="px-3 py-1.5 bg-white border border-slate-200 rounded text-xs font-bold shadow-sm disabled:opacity-50 transition cursor-pointer"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
-        </section>
       </main>
 
       {/* Popup Form Modal Overlay */}
