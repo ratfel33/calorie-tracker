@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js'; // Assuming you are using Supabase
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
-const supabase = createClient(
+const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // Or your standard auth key setup
 );
@@ -75,38 +77,39 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: NextRequest) { // Using NextRequest for easy URL parsing
+
+export async function DELETE(request: Request) {
   try {
-    // Extract the id directly from the URL query string
-    const { searchParams } = new URL(request.url);
-    const mealId = searchParams.get('id');
-    const targetId = String(mealId).trim();
+    // 1. Pull the data directly from the incoming request body
+    const body = await request.json();
+    const mealId = body.id;
 
     if (!mealId) {
-      return NextResponse.json({ error: 'No meal ID provided in URL parameters' }, { status: 400 });
+      return NextResponse.json({ error: 'No meal ID provided in body' }, { status: 400 });
     }
 
-    // Execute deletion query directly against your 'meals' table
-    const { error, count } = await supabase
-    .from('meals')
-    .delete()
-    .eq('id', targetId) // Matches the strict type format
-    .select();
+    // 2. Fire an isolated, uncached deletion sequence
+    const { data, error } = await supabaseAdmin
+      .from('meals')
+      .delete()
+      .eq('id', String(mealId).trim())
+      .select();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    if (count === 0) {
+    // 3. Evaluate matching results explicitly
+    if (!data || data.length === 0) {
       return NextResponse.json({ 
-        error: `Could not find a meal entry with ID: ${mealId}` 
+        error: `Postgres database mismatch. Verified 0 records for ID: ${mealId}` 
       }, { status: 404 });
     }
 
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error("Catch inside DELETE route:", error);
+    console.error("Fatal catch inside DELETE route:", error);
     return NextResponse.json({ error: 'Internal server processing error' }, { status: 500 });
   }
 }

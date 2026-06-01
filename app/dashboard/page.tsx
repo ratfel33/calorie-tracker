@@ -145,13 +145,18 @@ export default function Dashboard() {
     }
   };
 
-const handleConfirmDelete = async () => {
+
+  const handleConfirmDelete = async () => {
   if (!pendingDeleteId) return;
 
   try {
-    // PASSING ID VIA URL PARAMETER: Clear and unambiguous
-    const response = await fetch(`/api/analyze-food?id=${pendingDeleteId}`, { 
+    // PACKAGING INSIDE BODY: Standard, uncacheable transmission layout
+    const response = await fetch('/api/analyze-food', { 
       method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id: pendingDeleteId }),
     });
 
     const data = await response.json().catch(() => ({}));
@@ -173,7 +178,6 @@ const handleConfirmDelete = async () => {
     showToast("Network or unexpected setup error.", "error");
   }
 };
-
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
