@@ -88,8 +88,9 @@ export async function DELETE(request: NextRequest) { // Using NextRequest for ea
     // Execute deletion query directly against your 'meals' table
     const { error, count } = await supabase
       .from('meals') 
-      .delete({ count: 'exact' }) 
-      .eq('id', mealId);
+      .delete() 
+      .eq('id', mealId)
+      .select();
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
