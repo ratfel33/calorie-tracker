@@ -222,9 +222,23 @@ const handleConfirmDelete = async () => {
     showToast("An unexpected error occurred.", "error");
   }
 };
-  
+  // ... all your handleSaveMeal, handleDelete, and useEffect logic up here ...
+
+  // 🟢 INSERT THE LOADING SCREEN GUARD HERE:
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-3">
+        {/* Simple modern Tailwind spinner */}
+        <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-slate-400 text-xs font-semibold uppercase tracking-wider">
+          Securing Session...
+        </p>
+      </div>
+    );
+  }
 
   return (
+    
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       {/* Navigation Bar */}
       <nav className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md">
@@ -265,7 +279,7 @@ const handleConfirmDelete = async () => {
 
       {/* Main Workspace Container */}
       <main className="max-w-5xl mx-auto p-4 sm:p-8 space-y-8">
-        
+
         {/* Dynamic Gradient Progress Metric */}
         <section className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
           <div className="flex justify-between items-end">
@@ -320,6 +334,7 @@ const handleConfirmDelete = async () => {
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {isLoading ? (
+                  
                   <tr>
                     <td colSpan={2} className="px-6 py-12 text-center text-slate-400 font-medium animate-pulse">
                       Syncing with live database...
