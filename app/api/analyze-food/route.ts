@@ -77,41 +77,40 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    // 1. Extract the payload sent by the frontend
+    // 1. Force a strict extraction of the JSON body payload
     const body = await request.json();
-    const mealId = body.id;
-
-    console.log("Backend received a delete request for meal ID:", mealId);
+    
+    // Safety check: drill down directly into the body or look for a fallback wrapper
+    const mealId = body.id || body.mealId;
 
     if (!mealId) {
-      return NextResponse.json({ error: 'No meal ID provided' }, { status: 400 });
+      return NextResponse.json({ error: 'No meal ID provided in request body' }, { status: 400 });
     }
 
-    // 2. Run the deletion query against Supabase
-    // CRUCIAL: Make sure your table name here matches your actual Supabase table (e.g., 'meals' or 'daily_meals')
+    // 2. Perform the execution query against Supabase
+    // CRUCIAL: Change 'meals' below to your exact physical Supabase table name if it is different
     const { error, count } = await supabase
       .from('meals') 
-      .delete({ count: 'exact' }) // This lets us track if a row was actually touched
+      .delete({ count: 'exact' }) 
       .eq('id', mealId);
 
     if (error) {
-      console.error("Supabase returned a database error:", error.message);
+      console.error("Supabase Database Error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log(`Database rows deleted successfully. Count: ${count}`);
-
-    // If count is 0, it means the ID sent didn't match any row in the table
+    // 3. Evaluate matching results explicitly
     if (count === 0) {
       return NextResponse.json({ 
-        error: 'No matching meal record found to delete. Double-check your table ID mapping.' 
+        error: `Database sync mismatch. Found 0 records matching ID: ${mealId}` 
       }, { status: 404 });
     }
 
+    // Success!
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error("Fatal crash in DELETE API route:", error);
-    return NextResponse.json({ error: 'Internal server error processing deletion' }, { status: 500 });
+    console.error("Fatal catch inside DELETE route:", error);
+    return NextResponse.json({ error: 'Internal server processing crash' }, { status: 500 });
   }
 }
