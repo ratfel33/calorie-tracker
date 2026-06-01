@@ -26,6 +26,7 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('');
   const itemsPerPage = 10;
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [selectedDate, setSelectedDate] = useState(getLocalNicaraguaDateString());
@@ -54,15 +55,27 @@ export default function Dashboard() {
 };
 
   // Sync session profile user info safely on load without breaking DOM rendering
-  useEffect(() => {
-    const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserEmail(user.email ?? 'Active User');
-      }
-    };
-    checkUser();
-  }, []);
+useEffect(() => {
+  const getActiveUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      // 1. Look for full_name or display_name inside metadata
+      const nameFromMetadata = user.user_metadata?.full_name || user.user_metadata?.display_name;
+      
+      // 2. Fall back to the email prefix if no metadata name is found
+      // (e.g., if email is "juan@gmail.com", split('@')[0] gives "juan")
+      const fallbackName = user.email ? user.email.split('@')[0] : 'Guest';
+
+      // 3. Set your state variable
+      setUserName(nameFromMetadata || fallbackName);
+    } else {
+      setUserName('Guest Account');
+    }
+  };
+
+  getActiveUser();
+}, []);
 
   // 1. Fetch meals corresponding to the active calendar date filter
   const fetchMealsForDate = async (dateString: string) => {
@@ -204,7 +217,7 @@ const handleConfirmDelete = async () => {
         </div>
         <div className="flex items-center space-x-6">
           <span className="text-slate-300 font-medium hidden sm:inline">
-            Hello, <span className="text-teal-400 font-semibold">{userEmail || 'Guest Account'}</span>
+            Hello, <span className="text-teal-400 font-semibold">{userName || 'Guest Account'}</span>
           </span>
           {!userEmail ? (
             <a 
