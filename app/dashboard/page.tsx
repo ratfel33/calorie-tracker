@@ -145,15 +145,13 @@ export default function Dashboard() {
     }
   };
 
- const handleConfirmDelete = async () => {
+const handleConfirmDelete = async () => {
   if (!pendingDeleteId) return;
 
   try {
-    // Change this path to match your exact shared route folder name (e.g., /api/analyze-food)
-    const response = await fetch('/api/analyze-food', { 
-      method: 'DELETE', // The server will automatically see this method and run your DELETE function!
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: pendingDeleteId }),
+    // PASSING ID VIA URL PARAMETER: Clear and unambiguous
+    const response = await fetch(`/api/analyze-food?id=${pendingDeleteId}`, { 
+      method: 'DELETE',
     });
 
     const data = await response.json().catch(() => ({}));
@@ -286,10 +284,7 @@ export default function Dashboard() {
                       <td className="px-6 py-4 text-right font-bold text-slate-700">{meal.calories} kcal</td>
                       <td className="px-6 py-4 text-right text-sm font-medium">
                       <button
-                        onClick={() => {
-  alert(`Frontend sees this ID: ${meal.id} | Full item data: ${JSON.stringify(meal)}`);
-  triggerDeleteConfirmation(meal.id);
-} }
+                        onClick={() => triggerDeleteConfirmation(meal.id)}
                         className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors duration-200"
                         title="Delete entry"
                       >

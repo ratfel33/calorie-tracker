@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js'; // Assuming you are using Supabase
 
 const supabase = createClient(
@@ -75,42 +75,36 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) { // Using NextRequest for easy URL parsing
   try {
-    // 1. Force a strict extraction of the JSON body payload
-    const body = await request.json();
-    
-    // Safety check: drill down directly into the body or look for a fallback wrapper
-    const mealId = body.id || body.mealId;
+    // Extract the id directly from the URL query string
+    const { searchParams } = new URL(request.url);
+    const mealId = searchParams.get('id');
 
     if (!mealId) {
-      return NextResponse.json({ error: 'No meal ID provided in request body' }, { status: 400 });
+      return NextResponse.json({ error: 'No meal ID provided in URL parameters' }, { status: 400 });
     }
 
-    // 2. Perform the execution query against Supabase
-    // CRUCIAL: Change 'meals' below to your exact physical Supabase table name if it is different
+    // Execute deletion query directly against your 'meals' table
     const { error, count } = await supabase
       .from('meals') 
       .delete({ count: 'exact' }) 
       .eq('id', mealId);
 
     if (error) {
-      console.error("Supabase Database Error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // 3. Evaluate matching results explicitly
     if (count === 0) {
       return NextResponse.json({ 
-        error: `Database sync mismatch. Found 0 records matching ID: ${mealId}` 
+        error: `Could not find a meal entry with ID: ${mealId}` 
       }, { status: 404 });
     }
 
-    // Success!
     return NextResponse.json({ success: true });
 
   } catch (error) {
-    console.error("Fatal catch inside DELETE route:", error);
-    return NextResponse.json({ error: 'Internal server processing crash' }, { status: 500 });
+    console.error("Catch inside DELETE route:", error);
+    return NextResponse.json({ error: 'Internal server processing error' }, { status: 500 });
   }
 }
