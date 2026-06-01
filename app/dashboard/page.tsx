@@ -219,7 +219,7 @@ const handleConfirmDelete = async () => {
           <span className="text-slate-300 font-medium hidden sm:inline">
             Hello, <span className="text-teal-400 font-semibold">{userName || 'Guest Account'}</span>
           </span>
-          {!userEmail ? (
+          {!userName ? (
             <a 
               href="/login" 
               className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg transition font-bold"
