@@ -265,7 +265,7 @@ const chartData = meals.map((meal) => {
         </div>
         <div className="flex items-center space-x-6">
           <span className="text-slate-300 font-medium hidden sm:inline">
-            Hello, <span className="text-teal-400 font-semibold">{userName || 'Guest Account'}</span>
+            Hello, <span className="text-teal-400 font-semibold">{userName}</span>
           </span>
           {!userName ? (
             <a 
