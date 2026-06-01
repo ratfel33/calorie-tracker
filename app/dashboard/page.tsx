@@ -11,8 +11,6 @@ const getLocalNicaraguaDateString = () => {
   return `${year}-${month}-${day}`; // Returns exactly "2026-05-31" 
 };
 
-// 2. Set this function as the initial value for your date state hook
-const [selectedDate, setSelectedDate] = useState(getLocalNicaraguaDateString());
 
 interface Meal {
   id: string;
@@ -30,6 +28,8 @@ export default function Dashboard() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const itemsPerPage = 10;
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [selectedDate, setSelectedDate] = useState(getLocalNicaraguaDateString());
+
 
   // Form State
   const [foodInput, setFoodInput] = useState('');
