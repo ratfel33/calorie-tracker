@@ -149,15 +149,15 @@ export default function Dashboard() {
   if (!pendingDeleteId) return;
 
   try {
-    const response = await fetch('/api/delete-meal', { 
-      method: 'DELETE',
+    // Change this path to match your exact shared route folder name (e.g., /api/analyze-food)
+    const response = await fetch('/api/analyze-food', { 
+      method: 'DELETE', // The server will automatically see this method and run your DELETE function!
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: pendingDeleteId }),
     });
 
     const data = await response.json().catch(() => ({}));
 
-    // Clear the pending state immediately to close the confirmation banner
     setPendingDeleteId(null);
 
     if (response.ok) {
