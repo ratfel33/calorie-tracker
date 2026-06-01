@@ -36,12 +36,6 @@ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
       setMessage(`Error: ${error.message}`);
     } else {
       setMessage('Success! Setting name and redirecting...');
-      
-      // Keep this here for this run to lock in your "Rafael" display name!
-      await supabase.auth.updateUser({
-        data: { display_name: 'Rafael' }
-      });
-
       router.push('/dashboard'); 
     }
   } catch (err) {
