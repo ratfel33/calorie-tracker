@@ -280,12 +280,16 @@ export default function Dashboard() {
                   </tr>
                 ) : currentMeals.length > 0 ? (
                   currentMeals.map((meal) => (
-                    <tr key={meal.id} className="hover:bg-slate-50/80 transition-colors">
+                    
+                     <tr key={meal.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="px-6 py-4 font-medium text-slate-900">{meal.food_name}</td>
                       <td className="px-6 py-4 text-right font-bold text-slate-700">{meal.calories} kcal</td>
                       <td className="px-6 py-4 text-right text-sm font-medium">
                       <button
-                        onClick={() => triggerDeleteConfirmation(meal.id)}
+                        onClick={() => {
+  alert(`Frontend sees this ID: ${meal.id} | Full item data: ${JSON.stringify(meal)}`);
+  triggerDeleteConfirmation(meal.id);
+} }
                         className="text-rose-500 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300 p-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors duration-200"
                         title="Delete entry"
                       >
