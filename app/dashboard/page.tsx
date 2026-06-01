@@ -420,7 +420,7 @@ const chartData = meals.map((meal) => {
 {meals.length > 0 && (
   <div className="mt-8 border border-slate-800 p-6 rounded-xl shadow-md">
     <div className="mb-4">
-      <h2 className="text-sm font-semibold text-slate-300 tracking-wider">
+      <h2 className="text-sm font-bold  tracking-wider">
         Calorie Share Breakdown
       </h2>
       <p className="text-xs text-slate-400 mt-1">
