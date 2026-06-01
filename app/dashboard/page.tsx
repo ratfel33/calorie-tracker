@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
 import { useRouter } from 'next/navigation'; // 🟢 Use 'next/navigation'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from 'recharts';
+
 const getLocalNicaraguaDateString = () => {
   const d = new Date();
   const year = d.getFullYear();
@@ -41,7 +42,7 @@ export default function Dashboard() {
   const [foodInput, setFoodInput] = useState('');
   const [calculatedCalories, setCalculatedCalories] = useState<number | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-
+  const COLORS = ['#14b8a6', '#0ea5e9', '#6366f1', '#a855f7', '#f59e0b', '#10b981'];
   const totalCalories = meals.reduce((sum, meal) => sum + meal.calories, 0);
   const calorieLimit = 1500;
   const progressPercentage = Math.min((totalCalories / calorieLimit) * 100, 100);
@@ -454,6 +455,59 @@ const chartData = meals.map((meal) => {
             ))}
           </Bar>
         </BarChart>
+      </ResponsiveContainer>
+    </div>
+  </div>
+)}
+
+{/* --- PIE CHART BREAKDOWN CONTAINER --- */}
+{meals.length > 0 && (
+  <div className="mt-8 bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-md">
+    <div className="mb-6">
+      <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+        Daily Calorie Distribution
+      </h2>
+      <p className="text-xs text-slate-400 mt-1">
+        Proportional macro/calorie weight per meal
+      </p>
+    </div>
+
+    <div className="w-full h-72">
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={chartData}
+            dataKey="calories" // It weighs the slices based on the actual raw calories
+            nameKey="name"
+            cx="50%"
+            cy="50%"
+            innerRadius={60}  // 🟢 Creates the modern donut hole look
+            outerRadius={90}
+            paddingAngle={4}   // Adds a tiny separation gap between slices
+            label={({ name, payload }: any) => `${name} (${payload?.percentage}%)`}
+            labelLine={true}
+          >
+            {chartData.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+            ))}
+          </Pie>
+
+          <Tooltip
+            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '8px' }}
+            itemStyle={{ color: '#f8fafc' }}
+            formatter={(value: any, name: any, props: any) => [
+              `${value} kcal (${props.payload.percentage}%)`,
+              name
+            ]}
+          />
+
+          <Legend 
+            verticalAlign="bottom" 
+            height={36} 
+            iconType="circle"
+            wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }}
+          />
+        </PieChart>
       </ResponsiveContainer>
     </div>
   </div>
