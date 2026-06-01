@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
-export const formatToLocalPattern = (dateString: string) => {
-  if (!dateString) return '';
+const getLocalNicaraguaDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
   
-  // Force JavaScript to interpret the timestamp using your local timezone explicitly
-  return new Date(dateString).toLocaleDateString('es-NI', { // Or 'en-US' depending on your language preference
-    timeZone: 'America/Managua', // 🟢 Forces the global engine to look at your local clock
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  return `${year}-${month}-${day}`; // Returns exactly "2026-05-31" 
 };
+
+// 2. Set this function as the initial value for your date state hook
+const [selectedDate, setSelectedDate] = useState(getLocalNicaraguaDateString());
 
 interface Meal {
   id: string;
@@ -24,9 +24,6 @@ interface Meal {
 export default function Dashboard() {
   const [meals, setMeals] = useState<Meal[]>([]);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
