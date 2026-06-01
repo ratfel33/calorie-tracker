@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
+import { useRouter } from 'next/navigation'; // 🟢 Use 'next/navigation'
 const getLocalNicaraguaDateString = () => {
   const d = new Date();
   const year = d.getFullYear();
@@ -20,6 +21,7 @@ interface Meal {
 }
 
 export default function Dashboard() {
+  const router = useRouter(); // 🟢 Initialize the router here
   const [meals, setMeals] = useState<Meal[]>([]);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,6 +31,8 @@ export default function Dashboard() {
   const [userName, setUserName] = useState<string>('');
   const itemsPerPage = 10;
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [selectedDate, setSelectedDate] = useState(getLocalNicaraguaDateString());
 
 
@@ -57,9 +61,15 @@ export default function Dashboard() {
   // Sync session profile user info safely on load without breaking DOM rendering
 useEffect(() => {
   const getActiveUser = async () => {
+    // 1. Set loading to true while we verify the session
+    setLoading(true); 
+    
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user) {
+      // Set our authentication flag to true
+      setIsLoggedIn(true);
+
       // 1. Look for full_name or display_name inside metadata
       const nameFromMetadata = user.user_metadata?.full_name || user.user_metadata?.display_name;
       
@@ -70,12 +80,19 @@ useEffect(() => {
       // 3. Set your state variable
       setUserName(nameFromMetadata || fallbackName);
     } else {
+      // 🔴 NO USER IS LOGGED IN -> SET STATES AND BOUNCE TO LOGIN
+      setIsLoggedIn(false);
       setUserName('Guest Account');
+      router.push('/login');
+      return; // Stop execution here so loading doesn't flip to false on the dashboard page
     }
+
+    // 2. Turn off loading state once the user data is successfully loaded
+    setLoading(false);
   };
 
   getActiveUser();
-}, []);
+}, [router]); // Added router to the dependency array as per Next.js rules
 
   // 1. Fetch meals corresponding to the active calendar date filter
   const fetchMealsForDate = async (dateString: string) => {
