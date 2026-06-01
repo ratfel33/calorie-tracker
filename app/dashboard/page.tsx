@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedDate, setSelectedDate] = useState(getLocalNicaraguaDateString());
+  const [showFallback, setShowFallback] = useState(false);
 
 
   // Form State
@@ -123,6 +124,20 @@ useEffect(() => {
   useEffect(() => {
     fetchMealsForDate(selectedDate);
   }, [selectedDate]);
+
+  useEffect(() => {
+  // Tell TypeScript 'timer' can be a number or undefined
+  let timer: number | undefined; 
+  
+  if (isAnalyzing) {
+    setShowFallback(false);
+    timer = window.setTimeout(() => setShowFallback(true), 3000);
+  } else {
+    setShowFallback(false);
+  }
+  
+  return () => clearTimeout(timer);
+}, [isAnalyzing]);
 
   // 2. Analyze raw description input via secure serverless proxy route
   const handleAnalyzeFood = async () => {
@@ -257,6 +272,8 @@ const chartData = meals.map((meal) => {
     percentage: percentage,
   };
 });
+
+
   
   return (
     
@@ -518,6 +535,8 @@ const chartData = meals.map((meal) => {
 )}
       </main>
 
+      
+
       {/* Popup Form Modal Overlay */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -551,6 +570,26 @@ const chartData = meals.map((meal) => {
                 )}
               </div>
             </div>
+
+            {/* Non-Invasive Fallback Input */}
+{showFallback && calculatedCalories === null && (
+  <div className="mt-3 p-2 bg-slate-50 border border-slate-200 rounded-md animate-fadeIn">
+    <label className="block text-[11px] font-medium text-slate-500 mb-1">
+      API taking a moment? Enter calories manually:
+    </label>
+    <div className="flex gap-2">
+      <input
+        type="number"
+        placeholder="Add it yourself (kcal)"
+        className="w-full text-xs px-3 py-1.5 border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+        onChange={(e) => {
+          // Update your calorie state directly when they type
+          // setCalculatedCalories(Number(e.target.value)); 
+        }}
+      />
+    </div>
+  </div>
+)}
 
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end space-x-3">
               <button 
