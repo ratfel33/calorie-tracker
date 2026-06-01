@@ -72,6 +72,10 @@ useEffect(() => {
       // Set our authentication flag to true
       setIsLoggedIn(true);
 
+      console.log("--- SUPABASE USER OBJECT ---");
+      console.log("Logged in Email:", user.email);
+      console.log("Raw Metadata:", user.user_metadata);
+
       // 1. Look for full_name or display_name inside metadata
       const nameFromMetadata = user.user_metadata?.full_name || user.user_metadata?.display_name;
       
