@@ -37,7 +37,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedDate, setSelectedDate] = useState(getLocalNicaraguaDateString());
   const [showFallback, setShowFallback] = useState(false);
-
+  const [apiTriggeredAt, setApiTriggeredAt] = useState<number | null>(null);
 
   // Form State
   const [foodInput, setFoodInput] = useState('');
@@ -126,23 +126,27 @@ useEffect(() => {
   }, [selectedDate]);
 
   useEffect(() => {
-  // Tell TypeScript 'timer' can be a number or undefined
-  let timer: number | undefined; 
-  
-  if (isAnalyzing) {
-    setShowFallback(false);
-    timer = window.setTimeout(() => setShowFallback(true), 3000);
-  } else {
-    setShowFallback(false);
-  }
-  
+// If they haven't tried to analyze anything yet, stay hidden
+  if (!apiTriggeredAt) return;
+
+  setShowFallback(false);
+
+  // Start a strict 3-second countdown from the click timestamp
+  const timer = window.setTimeout(() => {
+    // Check if calories are missing (handles both null and 0, just in case)
+    if (calculatedCalories === null || calculatedCalories === undefined) {
+      setShowFallback(true);
+    }
+  }, 3000);
+
   return () => clearTimeout(timer);
-}, [isAnalyzing]);
+}, [apiTriggeredAt, calculatedCalories]);
 
   // 2. Analyze raw description input via secure serverless proxy route
   const handleAnalyzeFood = async () => {
     if (!foodInput.trim()) return;
     setIsAnalyzing(true);
+    setApiTriggeredAt(Date.now());
     try {
       const response = await fetch('/api/analyze-food', {
         method: 'POST',
