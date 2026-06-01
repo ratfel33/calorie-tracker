@@ -2,6 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase';
+export const formatToLocalPattern = (dateString: string) => {
+  if (!dateString) return '';
+  
+  // Force JavaScript to interpret the timestamp using your local timezone explicitly
+  return new Date(dateString).toLocaleDateString('es-NI', { // Or 'en-US' depending on your language preference
+    timeZone: 'America/Managua', // 🟢 Forces the global engine to look at your local clock
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
 
 interface Meal {
   id: string;

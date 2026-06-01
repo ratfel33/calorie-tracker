@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js'; // Assuming you are using Supabase
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // Or your standard auth key setup
-);
 
 // Deep-seeking function to find calories anywhere in a nested JSON structure
 function findCaloriesDeep(obj: any): number | null {
@@ -73,41 +68,6 @@ export async function POST(request: Request) {
 
   } catch (error) {
     console.error("Fatal error in API route:", error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    // 1. Grab the ID from the incoming custom headers
-    const mealId = request.headers.get('X-Meal-ID');
-
-    if (!mealId) {
-      return NextResponse.json({ error: 'No meal ID found in request headers' }, { status: 400 });
-    }
-
-    // 2. Execute the deletion query directly against your table
-    const { data, error } = await supabaseAdmin
-      .from('meals')
-      .delete()
-      .eq('id', mealId.trim())
-      .select();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // 3. Confirm whether Postgres found the row
-    if (!data || data.length === 0) {
-      return NextResponse.json({ 
-        error: `Postgres mismatch. The table 'meals' has an 'id' column, but no row matches: ${mealId}` 
-      }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true });
-
-  } catch (error) {
-    console.error("Catch inside DELETE route:", error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
