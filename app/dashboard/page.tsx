@@ -423,7 +423,7 @@ const chartData = meals.map((meal) => {
       <h2 className="text-sm font-bold  tracking-wider">
         Calorie Share Breakdown
       </h2>
-      <p className="text-xs text-slate-400 mt-1">
+      <p className="text-xs font-bold  mt-1">
         Total intake today: <span className="text-teal-400 font-bold">{totalCalories} kcal</span>
       </p>
     </div>
@@ -464,10 +464,10 @@ const chartData = meals.map((meal) => {
 {meals.length > 0 && (
   <div className="mt-8 border border-slate-800 p-6 rounded-xl shadow-md">
     <div className="mb-6">
-      <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
+      <h2 className="text-sm font-bold  uppercase tracking-wider">
         Daily Calorie Distribution
       </h2>
-      <p className="text-xs text-slate-400 mt-1">
+      <p className="text-xs font-bold  mt-1">
         Proportional macro/calorie weight per meal
       </p>
     </div>
