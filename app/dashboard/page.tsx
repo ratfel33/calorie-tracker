@@ -387,7 +387,9 @@ const chartData = meals.map((meal) => {
               </tbody>
             </table>
 
-                {/* --- CALORIE BREAKDOWN CHART CONTAINER --- */}
+          </div>
+
+          {/* --- CALORIE BREAKDOWN CHART CONTAINER --- */}
 {meals.length > 0 && (
   <div className="mt-8 bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-md">
     <div className="mb-4">
@@ -430,10 +432,6 @@ const chartData = meals.map((meal) => {
     </div>
   </div>
 )}
-
-
-
-          </div>
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
