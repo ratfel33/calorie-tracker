@@ -83,7 +83,7 @@ useEffect(() => {
       // 🔴 NO USER IS LOGGED IN -> SET STATES AND BOUNCE TO LOGIN
       setIsLoggedIn(false);
       setUserName('Guest Account');
-      router.push('/login');
+      router.push('/');
       return; // Stop execution here so loading doesn't flip to false on the dashboard page
     }
 
