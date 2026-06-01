@@ -418,7 +418,7 @@ const chartData = meals.map((meal) => {
 
         {/* --- CALORIE BREAKDOWN CHART CONTAINER --- */}
 {meals.length > 0 && (
-  <div className="mt-8 bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-md">
+  <div className="mt-8 border border-slate-800 p-6 rounded-xl shadow-md">
     <div className="mb-4">
       <h2 className="text-sm font-semibold text-slate-300 tracking-wider">
         Calorie Share Breakdown
@@ -462,7 +462,7 @@ const chartData = meals.map((meal) => {
 
 {/* --- PIE CHART BREAKDOWN CONTAINER --- */}
 {meals.length > 0 && (
-  <div className="mt-8 bg-slate-900 border border-slate-800 p-6 rounded-xl shadow-md">
+  <div className="mt-8 border border-slate-800 p-6 rounded-xl shadow-md">
     <div className="mb-6">
       <h2 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
         Daily Calorie Distribution
